@@ -39,7 +39,6 @@ const UploadModal = () => {
       setIsLoading(true);
       const imageFile = values.image?.[0];
       const songFile = values.song?.[0];
-      console.log(values);
       if (!imageFile || !songFile || !user) {
         toast.error("Missing fileds");
         return;
