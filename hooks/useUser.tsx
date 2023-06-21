@@ -1,10 +1,11 @@
-import { Subscription, UserDetails } from "@/types";
-import { User } from "@supabase/auth-helpers-nextjs";
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState, createContext, useContext } from "react";
 import {
-  useSessionContext,
   useUser as useSupaUser,
+  useSessionContext,
+  User,
 } from "@supabase/auth-helpers-react";
+
+import { UserDetails, Subscription } from "@/types";
 
 type UserContextType = {
   accessToken: string | null;
@@ -30,7 +31,7 @@ export const MyUserContextProvider = (props: Props) => {
   } = useSessionContext();
   const user = useSupaUser();
   const accessToken = session?.access_token ?? null;
-  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [isLoadingData, setIsloadingData] = useState(false);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
 
@@ -39,28 +40,28 @@ export const MyUserContextProvider = (props: Props) => {
     supabase
       .from("subscriptions")
       .select("*, prices(*, products(*))")
-      .in("status", ["trialiong", "active"])
+      .in("status", ["trialing", "active"])
       .single();
 
   useEffect(() => {
     if (user && !isLoadingData && !userDetails && !subscription) {
-      setIsLoadingData(true);
+      setIsloadingData(true);
       Promise.allSettled([getUserDetails(), getSubscription()]).then(
         (results) => {
           const userDetailsPromise = results[0];
-          const subscriptionsPromise = results[1];
-          if (userDetailsPromise.status === "fulfilled") {
+          const subscriptionPromise = results[1];
+          console.log(results);
+
+          if (userDetailsPromise.status === "fulfilled")
             setUserDetails(userDetailsPromise.value.data as UserDetails);
-          }
 
-          if (subscriptionsPromise.status === "fulfilled") {
-            setSubscription(subscriptionsPromise.value.data as Subscription);
-          }
+          if (subscriptionPromise.status === "fulfilled")
+            setSubscription(subscriptionPromise.value.data as Subscription);
 
-          setIsLoadingData(false);
+          setIsloadingData(false);
         }
       );
-    } else if (!user && !isLoadingUser && isLoadingData) {
+    } else if (!user && !isLoadingUser && !isLoadingData) {
       setUserDetails(null);
       setSubscription(null);
     }
@@ -80,8 +81,7 @@ export const MyUserContextProvider = (props: Props) => {
 export const useUser = () => {
   const context = useContext(UserContext);
   if (context === undefined) {
-    throw new Error("Use user must be used within aMyuserContectProvider");
+    throw new Error(`useUser must be used within a MyUserContextProvider.`);
   }
-
   return context;
 };
